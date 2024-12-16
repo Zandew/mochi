@@ -11,7 +11,7 @@ weights_volume = modal.Volume.from_name("mochi-tune-weights", create_if_missing=
 finetunes_volume = modal.Volume.from_name("mochi-tune-finetunes", create_if_missing=True)
 outputs_volume = modal.Volume.from_name("mochi-tune-outputs", create_if_missing=True)
 
-USERNAME = "genmoai"
+USERNAME = "zandew"
 REPOSITORY = "mochi"
 CLONE_CMD = f"git clone https://github.com/{USERNAME}/{REPOSITORY}.git"
 
@@ -23,6 +23,7 @@ base_img = (
     .workdir(REPOSITORY)
     .pip_install("gdown", "setuptools", "wheel")
     .run_commands('pip install -e . --no-build-isolation')
+    .run_commands("git pull", force_build=True)
 )
 
 MINUTES = 60
@@ -55,7 +56,7 @@ def download_videos():
     volumes={
         "/weights": weights_volume,
     },
-    timeout=1*HOURS,
+    timeout=6*HOURS,
 )
 def download_weights():
     # HF-transfer and snapshot download tend to hang on the large model, so we download it manually with wget
@@ -84,13 +85,13 @@ def download_weights():
 def preprocess():
     import subprocess
     print("🍡 Preprocessing videos. This may take 2-3 minutes.")
-    video_dir = "videos_dissolve"
+    video_dir = "badminton_videos"
     subprocess.run([
         "bash", "demos/fine_tuner/preprocess.bash", 
         "-v", f"/videos/{video_dir}/",
         "-o", "/videos_prepared/", 
         "-w", "/weights/", 
-        "-n", "37"
+        "-n", "60"
     ])
 
 # Remote function for finetuning the model using the prepared dataset
@@ -106,7 +107,7 @@ def preprocess():
         "/finetunes": finetunes_volume,
     },
     mounts=[modal.Mount.from_local_file("lora.yaml", remote_path=f"{REPOSITORY}/lora.yaml")],
-    timeout=4*HOURS,
+    timeout=6*HOURS,
     gpu="H100"
 )
 def finetune():

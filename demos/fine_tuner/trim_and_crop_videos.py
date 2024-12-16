@@ -51,13 +51,9 @@ def truncate_videos(folder, output_folder, duration, resolution):
                 )
                 continue
 
-            # First truncate duration
-            while True: 
-                # Skip if video is too short
-                if video.duration < duration:
-                    break
-                truncated = video.subclip(0, duration)
-                video = video.subclip(duration, video.duration)
+            l_dur, r_dur = 0, duration
+            while r_dur <= video.duration:
+                truncated = video.subclip(l_dur, r_dur)
 
                 # Calculate crop dimensions to maintain aspect ratio
                 target_ratio = target_width / target_height
