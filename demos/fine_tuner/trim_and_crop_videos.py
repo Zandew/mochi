@@ -1,10 +1,14 @@
 #! /usr/bin/env python3
 from pathlib import Path
 import shutil
+import random
 
 import click
 from moviepy.editor import VideoFileClip
 from tqdm import tqdm
+
+
+MAX_SAMPLES_PER_VIDEO = 50
 
 
 @click.command()
@@ -51,11 +55,16 @@ def truncate_videos(folder, output_folder, duration, resolution):
                 )
                 continue
 
-            l_dur, r_dur = 0, duration
-            while r_dur <= video.duration:
+            
+            total_samples = int(video.duration / duration)
+            video_samples = [(i * duration, (i + 1) * duration) for i in range(total_samples)]
+
+            if total_samples > MAX_SAMPLES_PER_VIDEO:
+                click.echo(f"Sampling {MAX_SAMPLES_PER_VIDEO} subclips for video {str(file_path)}")
+                video_samples = random.sample(video_samples, MAX_SAMPLES_PER_VIDEO)
+
+            for l_dur, r_dur in video_samples:
                 truncated = video.subclip(l_dur, r_dur)
-                l_dur += duration
-                r_dur += duration
 
                 # Calculate crop dimensions to maintain aspect ratio
                 target_ratio = target_width / target_height
