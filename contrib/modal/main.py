@@ -79,7 +79,7 @@ def download_weights():
         "/videos_prepared": videos_prepared_volume,
         "/weights": weights_volume,
     },
-    timeout=30*MINUTES,
+    timeout=6*HOURS,
     gpu="H100"
 )
 def preprocess():
@@ -92,6 +92,54 @@ def preprocess():
         "-o", "/videos_prepared/", 
         "-w", "/weights/", 
         "-n", "60"
+    ])
+
+
+@app.function(
+    image=base_img, 
+    volumes={
+        "/videos": videos_volume,
+        "/videos_prepared": videos_prepared_volume,
+        "/weights": weights_volume,
+    },
+    timeout=2*HOURS,
+    cpu=1.0,
+)
+def preprocess_cpu_only():
+    import subprocess
+    print("🍡 Preprocessing videos. This may take 2-3 minutes.")
+    video_dir = "badminton_videos"
+    subprocess.run([
+        "bash", "demos/fine_tuner/preprocess.bash", 
+        "-v", f"/videos/{video_dir}/",
+        "-o", "/videos_prepared/", 
+        "-w", "/weights/", 
+        "-n", "60",
+        "-c",
+    ])
+
+
+@app.function(
+    image=base_img, 
+    volumes={
+        "/videos": videos_volume,
+        "/videos_prepared": videos_prepared_volume,
+        "/weights": weights_volume,
+    },
+    timeout=6*HOURS,
+    gpu="H100"
+)
+def preprocess_gpu_only():
+    import subprocess
+    print("🍡 Preprocessing videos. This may take 2-3 minutes.")
+    video_dir = "badminton_videos"
+    subprocess.run([
+        "bash", "demos/fine_tuner/preprocess.bash", 
+        "-v", f"/videos/{video_dir}/",
+        "-o", "/videos_prepared/", 
+        "-w", "/weights/", 
+        "-n", "60",
+        "-g",
     ])
 
 # Remote function for finetuning the model using the prepared dataset
