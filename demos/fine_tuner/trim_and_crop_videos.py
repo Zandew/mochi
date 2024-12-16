@@ -54,6 +54,8 @@ def truncate_videos(folder, output_folder, duration, resolution):
             l_dur, r_dur = 0, duration
             while r_dur <= video.duration:
                 truncated = video.subclip(l_dur, r_dur)
+                l_dur += duration
+                r_dur += duration
 
                 # Calculate crop dimensions to maintain aspect ratio
                 target_ratio = target_width / target_height
